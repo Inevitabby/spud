@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+set -o pipefail -o noclobber -o nounset
+
+# === Variable Declarations ===
+
+WORK=25  SHORT=5  LONG=30  GRACE=5 # Timers
+CYCLE=3  POMO=1                    # Counters
+PROMPT=false  DEBUG=false          # Flags
+
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/spud"
+CONFIG_FILE="$CONFIG_DIR/hooks.sh"
+
+# === Hooks ===
+
+# Default hooks (user can override in ~/.config/spud/hooks.sh)
+on_start()       { :; }
+on_timer_start() { :; }
+on_timer_tick()  { printf "\r%im remaining in %s interval " "$2" "$1"; }
+on_timer_end()   { printf "\n%s Interval Over! " "$1"; }
+on_end()         { printf "\n\nCompleted Pomodoros: %s\n" "$((POMO - 1))"; }
+
+# Load user configuration
+[[ -f "$CONFIG_FILE" ]] && source "$CONFIG_FILE"
+
+# === Functions ===
+
+show_help() {
+	cat <<-END
+	usage: spud [options]
+
+	Configuration:
+	  Place a bash script at '$CONFIG_FILE' to override default behaviors.
+	  See the example hooks.sh for details.
+
+	Options:
+	  -w --work-timer <int>          [default: 25]
+	  -b --break-timer <int>         [default 5]
+	  -l --long-break-timer <int>    [default 30] (0 to disable)
+	  -i --long-break-interval <int> [default 3]
+	  -g --grace-timer <int>         [default 5]
+	  -p --prompt-user               Wait for input when timer ends
+	  -s --speedup                   Debug: Count seconds, not minutes
+	  -h --help                      Show this message
+	END
+	exit 0
+}
+
+# Source: https://stackoverflow.com/a/16745408
+delete_lines() {
+	printf "\r\n"
+	for ((i=$1; i>0; i--)); do printf "$(tput cuu1)$(tput el)"; done
+}
+
+run_timer() {
+	local TIMER=$1
+	local NAME=$2
+	local UNIT=$([[ "$DEBUG" == true ]] && echo "1s" || echo "1m")
+
+	# Guard: Timer disabled
+	[[ $TIMER -eq 0 ]] && return
+
+	# Run timer
+	on_timer_start "$NAME"
+	for ((i=TIMER; i>0; i--)); do 
+		on_timer_tick "$NAME" "$i"
+		sleep "$UNIT"
+	done
+	on_timer_end "$NAME" &
+
+	sleep "$GRACETIMER"
+
+	# Wait for user input
+	if $PROMPTUSER; then
+		read -t 1 -n 10000 discard 2>/dev/null # Flush STDIN
+		printf "\n\nPress any key to continue... " && read -r
+		delete_lines 3
+	fi
+
+	delete_lines 2
+}
+
+# Hide user input (and unhide on exit)
+cleanup() { on_end; stty echo; exit; }
+trap "cleanup" SIGINT
+
+# === Parse Arguments ===
+# Source: https://stackoverflow.com/a/29754866
+
+! getopt --test >/dev/null && [[ ${PIPESTATUS[0]} -ne 4 ]] && 
+	{ echo "Fatal Error: Enhanced getopt not found!"; exit 1; }
+
+LONGOPTS="work-timer:,break-timer:,long-break-timer:,long-break-interval:,grace-timer:,prompt-user,speedup,help"
+OPTIONS="w:b:l:i:g:psh"
+
+! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+[[ ${PIPESTATUS[0]} -ne 0 ]] && show_help
+eval set -- "$PARSED"
+
+while true; do case "$1" in
+	-w|--work-timer)          WORK=$2; shift 2;;
+	-b|--break-timer)         SHORT=$2; shift 2;;
+	-l|--long-break-timer)    LONG=$2; shift 2;;
+	-i|--long-break-interval) CYCLE=$2; shift 2;;
+	-g|--grace-timer)         GRACE=$2; shift 2;;
+	-p|--prompt-user)         PROMPT=true; shift;;
+	-s|--speedup)             DEBUG=true; shift;;
+	--)                       shift; break;;
+	-h|--help|*)              show_help;;
+esac; done
+
+# === Main Loop ===
+
+stty -echo
+on_start && printf "\n"
+while true; do
+	run_timer "$WORK" "Work"
+	if [ "$((POMO % (CYCLE + 1)))" -eq 0 ] && [ "$LONG" -ne 0 ]; then
+		run_timer "$LONG" "Long Break"
+	else
+		run_timer "$SHORT" "Break"
+	fi
+	((POMO++))
+done
