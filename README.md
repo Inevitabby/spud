@@ -18,8 +18,14 @@ make install
 
 > [!NOTE]
 > This installs:
-> - `spud` → `/usr/local/bin/spud`
+> - `spud` → `~/.local/bin/spud`
 > - `notification.wav` and `hooks.sh` → `~/.config/spud/`
+
+> [!CAUTION]
+> If you're on a minimalist distro, make sure you have ~/.local/bin/ in your path!
+> ```bash
+> export PATH="$HOME/.local/bin:$PATH" # add to shell config if needed
+> ```
 
 # Usage
 
