@@ -8,26 +8,18 @@
 	<img src="https://img.shields.io/github/license/inevitabby/spud?color=1e1e2e&labelColor=94e2d5&style=flat" alt="License">
 </div>
 
-A potato-themed focus timer for the shell.
+A extensible potato-themed focus timer for the shell.
 
 > **Use**: Work with complete focus for 25 minutes, break for 5. After four cycles, take a longer 20—30 minute break.[^1]
 
 # Installation
 
-```bash
+```
 make install
 ```
 
 > [!NOTE]
-> This installs:
-> - `spud` → `~/.local/bin/spud`
-> - `notification.wav` and `hooks.sh` → `~/.config/spud/`
-
-> [!WARNING]
 > If you're on a minimalist distro, make sure you have `~/.local/bin/` in your path!
-> ```bash
-> export PATH="$HOME/.local/bin:$PATH" # add to shell config if needed
-> ```
 
 # Usage
 
@@ -47,12 +39,6 @@ Options:
   -p --prompt-user               Wait for input when timer ends
   -s --speedup                   Debug: Count seconds, not minutes
   -h --help                      Show this message
-```
-
-# Uninstall
-
-```bash
-make uninstall
 ```
 
 # Credits
