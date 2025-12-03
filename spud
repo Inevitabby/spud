@@ -67,10 +67,10 @@ run_timer() {
 	done
 	on_timer_end "$NAME" &
 
-	sleep "$GRACETIMER"
+	sleep "$GRACE"
 
 	# Wait for user input
-	if $PROMPTUSER; then
+	if $PROMPT; then
 		read -t 1 -n 10000 discard 2>/dev/null # Flush STDIN
 		printf "\n\nPress any key to continue... " && read -r
 		delete_lines 3
