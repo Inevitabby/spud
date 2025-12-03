@@ -32,12 +32,12 @@ on_timer_end() {
 
 # Runs when the script exits (Ctrl+C)
 on_end() {
-    # $POMO is available from the main script
-    local DONE=$((POMO - 1))
+    # $POTO is available from the main script
+    local DONE=$((POTO - 1))
     
     echo ""
     echo "=================================="
     echo " Session Finished"
-    echo " Pomodoros Completed: $DONE"
+    echo " Potatoes Completed: $DONE"
     echo "=================================="
 }

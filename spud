@@ -4,7 +4,7 @@ set -o pipefail -o noclobber -o nounset
 # === Variable Declarations ===
 
 WORK=25  SHORT=5  LONG=30  GRACE=5 # Timers
-CYCLE=3  POMO=1                    # Counters
+CYCLE=3  POTO=1                    # Counters
 PROMPT=false  DEBUG=false          # Flags
 
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/spud"
@@ -17,7 +17,7 @@ on_start()       { :; }
 on_timer_start() { :; }
 on_timer_tick()  { printf "\r%im remaining in %s interval " "$2" "$1"; }
 on_timer_end()   { printf "\n%s Interval Over! " "$1"; }
-on_end()         { printf "\n\nCompleted Pomodoros: %s\n" "$((POMO - 1))"; }
+on_end()         { printf "\n\nCompleted Potatoes: %s\n" "$((POTO - 1))"; }
 
 # Load user configuration
 [[ -f "$CONFIG_FILE" ]] && source "$CONFIG_FILE"
@@ -114,10 +114,10 @@ stty -echo
 on_start && printf "\n"
 while true; do
 	run_timer "$WORK" "Work"
-	if [ "$((POMO % (CYCLE + 1)))" -eq 0 ] && [ "$LONG" -ne 0 ]; then
+	if [ "$((POTO % (CYCLE + 1)))" -eq 0 ] && [ "$LONG" -ne 0 ]; then
 		run_timer "$LONG" "Long Break"
 	else
 		run_timer "$SHORT" "Break"
 	fi
-	((POMO++))
+	((POTO++))
 done
